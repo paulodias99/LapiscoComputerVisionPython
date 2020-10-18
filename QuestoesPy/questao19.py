@@ -1,6 +1,6 @@
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 image = cv2.imread('C:/Users/User/Desktop/GIT/LapiscoComputerVisionPython/images/ImagemOriginal.jpg')
 

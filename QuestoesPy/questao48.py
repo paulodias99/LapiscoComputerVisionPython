@@ -1,7 +1,9 @@
-import cv2
-import os
-import glob
 import csv
+import glob
+import os
+
+import cv2
+
 
 def extract_hu_moments(images):
     print('[INFO] Extracting HU Moments.')

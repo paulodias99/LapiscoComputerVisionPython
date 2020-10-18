@@ -1,7 +1,9 @@
-import cv2
-import os
-import glob
 import csv
+import glob
+import os
+
+import cv2
+
 
 def extract_central_moments(images):
     print('[INFO] Extracting central moments.')

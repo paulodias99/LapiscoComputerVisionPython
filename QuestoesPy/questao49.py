@@ -1,9 +1,11 @@
-import cv2
-import os
-import glob
 import csv
+import glob
+import os
+
+import cv2
 import numpy as np
 from skimage import feature
+
 
 def extract_lbp(images, number_points, radius, eps=1e-7):
     print('[INFO] Extracting LBP.')
