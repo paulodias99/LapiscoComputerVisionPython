@@ -5,78 +5,83 @@ import csv
 import numpy as np
 from skimage import feature
 
-def extract_hu_moments():
-    complete_hu_moments = []
+class Extraction():
+    def __init__(self, path):
+        self.path = path
 
-    for i, image in enumerate(path_image):
-        print('[INFO] Extracting features of image {}/{}'.format(i + 1, len(self.path_image)))
+    def save_csv(self, extractor_name, features): #função para salvar os resultados em um arquivo csv
+        for vector in features:
+            print(vector)
 
-        file = cv2.imread(image) #lendo a imagem
-        file = cv2.cvtColor(file, cv2.COLOR_BGR2GRAY) #convertendo para cina
+        with open(extractor_name + '.csv', 'a') as outfile: #crio arquivo csv
+            writer = csv.writer(outfile)
+            writer.writerows(features)
 
-        moments = cv2.moments(file) #fazendo a extração
-        hu_moments = cv2.HuMoments(moments) #criando a lista
-        new_moments = [moment[0] for moment in hu_moments]
-        print(new_moments)
+    def lbp(self, points, radius, eps=1e-7):
+        #print('Iniciando LBP.')
+        list_lbp = []
 
-        complete_hu_moments.append(new_moments)
+        for i, image in enumerate(self.path):
+            arq = cv2.imread(image)
 
-    self.save_results('HUMoments', complete_hu_moments) #salvando o resultado
-    return complete_hu_moments
+            arq = cv2.cvtColor(arq, cv2.COLOR_BGR2GRAY)
 
-def extract_lbp(number_points, radius, eps=1e-7):
-    lbp_features = []
+            lbp = feature.local_binary_pattern(arq, points, radius, method='uniform') #extraindo lbp
 
-    for i, image in enumerate(self.path_image):
-        file = cv2.imread(image)
+            hist, ret = np.histogram(lbp.ravel(), bins=np.arange(0, points + 3), range=(0, points + 2)) #calculo do historigrama
 
-        file = cv2.cvtColor(file, cv2.COLOR_BGR2GRAY)
-        lbp = feature.local_binary_pattern(file, number_points, radius, method='uniform')
+            hist = hist.astype('float')
+            hist /= (hist.sum() + eps)
 
-        hist, ret = np.histogram(lbp.ravel(), bins=np.arange(0, number_points + 3), range=(0, number_points + 2))
-        hist = hist.astype('float')
-        hist /= (hist.sum() + eps)
+            image_lbp = [item for item in list(hist)] #criar um vetor com os features extraídos
 
-        image_lbp = [item for item in list(hist)]
-        lbp_features.append(image_lbp)
+            list_lbp.append(image_lbp)
 
-    self.save_results('LBP', lbp_features)
-    return lbp_features
+        self.save_csv('LBP', list_lbp)
+        return list_lbp
 
-def extract_glcm(distances, angles):
-    glcm_features = []
+    def hu(self):
+        #print('Iniciando HU Moments.')
+        list_hu = []
 
-    for i, image in enumerate(self.path_image):
-        file = cv2.imread(image)
+        for i, image in enumerate(self.path):
+            arq = cv2.imread(image) #leio a imagem
+            arq = cv2.cvtColor(arq, cv2.COLOR_BGR2GRAY) #converto para cinza
 
-        file = cv2.cvtColor(file, cv2.COLOR_BGR2GRAY)
+            moments = cv2.moments(arq) #faço extração
+            HU = cv2.HuMoments(moments) #crio a lista com os features extraídos
+            new_hu = [moment[0] for moment in HU]
+            print(new_hu)
 
-        glcm = feature.greycomatrix(file, distances, angles, 256, symmetric=False, normed=True)
+            list_hu.append(new_hu)
 
-        glcm_properties = ['contrast', 'dissimilarity', 'homogeneity', 'energy', 'correlation', 'ASM']
-        features = [feature.greycoprops(glcm, glcm_property)[0, 0] for glcm_property in glcm_properties]
-        glcm_features.append(features)
+        self.save_csv('HUMoments', list_hu)
+        return list_hu
 
-    self.save_results('GLCM', glcm_features)
-    return glcm_features
+    def glcm(self, distances, angles):
+        #print('Iniciando GLCM.')
+        list_glcm = []
 
-def save_results(extractor_name, features):
+        for i, image in enumerate(self.path):
+            arq = cv2.imread(image)
 
-    for vector in features:
-        print(vector)
+            arq = cv2.cvtColor(arq, cv2.COLOR_BGR2GRAY)
 
-    with open(extractor_name + '.csv', 'a') as outfile:
-        writer = csv.writer(outfile)
-        writer.writerows(features)
+            glcm = feature.greycomatrix(arq, distances, angles, 256, symmetric=False, normed=True)
 
+            glcm_properties = ['contrast', 'dissimilarity', 'homogeneity', 'energy', 'correlation', 'ASM']
+            features = [feature.greycoprops(glcm, glcm_property)[0, 0] for glcm_property in glcm_properties]
+
+            list_glcm.append(features)
+
+        self.save_csv('GLCM', list_glcm)
+        return list_glcm
 
 path = './number1/'
 
-#for para leitura dos arquivos da pasta
 for r, d, f in os.walk(path):
     for filename in f:
-
-        extractions = glob.glob(os.path.join(path, filename))
-        extractions.extract_hu_moments()
-        extractions.extract_lbp(number_points=24, radius=8)
-        extractions.extract_glcm(distances=[5], angles=[0])
+        extractions = Extraction(glob.glob(os.path.join(path, filename)))
+        extractions.hu()
+        extractions.lbp(points=24, radius=8)
+        extractions.glcm(distances=[5], angles=[0])
